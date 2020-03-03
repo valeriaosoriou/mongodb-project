@@ -1,0 +1,41 @@
+[{
+  "id": 1,
+  "first_name": "Campari",
+  "price": "$2.95"
+}, {
+  "id": 2,
+  "first_name": "Pork - Sausage, Medium",
+  "price": "$9.26"
+}, {
+  "id": 3,
+  "first_name": "Milk Powder",
+  "price": "$2.32"
+}, {
+  "id": 4,
+  "first_name": "Cheese - Gorgonzola",
+  "price": "$1.76"
+}, {
+  "id": 5,
+  "first_name": "Compound - Pear",
+  "price": "$4.81"
+}, {
+  "id": 6,
+  "first_name": "Soup - Cream Of Broccoli",
+  "price": "$0.91"
+}, {
+  "id": 7,
+  "first_name": "Cabbage - Red",
+  "price": "$9.01"
+}, {
+  "id": 8,
+  "first_name": "Wine - Delicato Merlot",
+  "price": "$6.79"
+}, {
+  "id": 9,
+  "first_name": "Brownies - Two Bite, Chocolate",
+  "price": "$2.18"
+}, {
+  "id": 10,
+  "first_name": "Bread - French Baquette",
+  "price": "$5.34"
+}]
