@@ -1,11 +1,13 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const bcryptjs = require('bcryptjs');
-const config = require('./config.json');
-const product = require('./products.json');
+const bodyParser = require('body-parser'); //to parse all data coming from the user and db
+const cors = require('cors'); //to include cross orgin request
+const bcryptjs = require('bcryptjs'); //to hash and compare password in an encrypted method
+const config = require('./config.json'); //has credentials
+const product = require('./products.json'); //external json data from mockaroo api
+const dbProduct = require('./models/products.js');
+const User = require('./models/users.js');
 
 const port= 3000;
 
@@ -31,7 +33,11 @@ app.use((req,res,next)=>{
   next(); //include this to go to the next middleware
 });
 
+//INCLUDING BODY-PARSER, CORS, BCRYPTJS
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:false}));
 
+app.use (cors());
 
 //to see in the browser
 app.get('/', (req, res) => res.send('Hello World!'))
@@ -50,6 +56,50 @@ app.get('/products/p=:id', (req,res)=>{
 		}
 	}
 });
+
+//RESGISTER USER 
+app.post('/registerUser', (req,res)=>{
+	//checking if user is found in the db already
+	User.findOne({username: req.body.username}, (err, userResult)=>{
+		if (userResult){
+			res.send('username taken already. Please try another time');
+		}else{
+		const hash = bcryptjs.hashSync(req.body.password); //hash the password
+   		const user = new User({
+    		_id : new mongoose.Types.ObjectId,
+    		username : req.body.username,
+    		email : req.body.email,
+    		password :req.body.password
+   		});
+   		//Save to database and notify the user accordingly
+   		user.save().then(result =>{ 
+    	res.send(result);
+   		}).catch(err => res.send(err));
+		}
+	}) 	
+});
+
+//GET ALL USERS
+app.get('/allUsers', (req,res)=>{
+	User.find().then(result=>{
+		res.send(result);
+	})
+});
+
+//LOGIN THE USER
+app.post('/loginUser', (req,res)=>{
+  User.findOne({username:req.body.username},(err,userResult)=>{
+    if (userResult){
+      if (bcryptjs.compareSync(req.body.password, userResult.password)){
+        res.send(userResult);
+      } else {
+        res.send('not authorized');
+      }//inner if
+    } else {
+       res.send('user not found. Please register');
+    }//outer if
+  });//findOne
+});//post
 
 
 //keep this always at the bottom so that you can see the errors reported
