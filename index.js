@@ -6,7 +6,7 @@ const cors = require('cors'); //to include cross orgin request
 const bcryptjs = require('bcryptjs'); //to hash and compare password in an encrypted method
 const config = require('./config.json'); //has credentials
 const product = require('./products.json'); //external json data from mockaroo api
-const dbProduct = require('./models/products.js');
+const Product = require('./models/products.js');
 const User = require('./models/users.js');
 
 const port= 3000;
@@ -14,7 +14,7 @@ const port= 3000;
 //CONNECT TO DB
 const mongodbURI = `mongodb+srv://${config.MONGO_USER}:${config.MONGO_PASSWORD}@${config.MONGO_CLUSTER_NAME}-poi9f.mongodb.net/test?retryWrites=true&w=majority`;
 // const mongodbURI = 'mongodb+srv://valeriaosoriou:Val3r1ta1@cluster0-poi9f.mongodb.net/test?retryWrites=true&w=majority';
-mongoose.connect(mongodbURI, {useNewUrlParser: true, useUnifiedTopology: true}) //we replace here with the mongo link password 
+mongoose.connect(mongodbURI, {useNewUrlParser: true, useUnifiedTopology: true}) //we replace here with the mongo link password
 .then(()=> console.log('DB connected!'))
 .catch(err =>{
   console.log(`DBConnectionError: ${err.message}`);
@@ -27,7 +27,6 @@ db.once('open', function() {
   console.log('We are connected to mongo db');
 });
 
-
 app.use((req,res,next)=>{
   console.log(`${req.method} request for ${req.url}`);
   next(); //include this to go to the next middleware
@@ -39,11 +38,9 @@ app.use(bodyParser.urlencoded({extended:false}));
 
 app.use (cors());
 
-//to see in the browser
-app.get('/', (req, res) => res.send('Hello World!'))
+app.get('/', (req, res) => res.send('Hello World!'))//to see in the browser
 
-//Requesting info from product json
-app.get('/allProducts', (req,res)=>{
+app.get('/allProducts', (req,res)=>{ //Requesting info from PRODUCT json
 	res.json(product);
 });
 
@@ -52,12 +49,69 @@ app.get('/products/p=:id', (req,res)=>{
 	for (let i = 0; i < product.length; i++){
 		if (idParam.toString() === product[i].id.toString()){
 			res.json(product[i]);
-		
+
 		}
 	}
 });
 
-//RESGISTER USER 
+// ADD PRODUCTS
+app.post('/addProduct', (req, res)=>{
+  //checking if user is found in the db
+  Product.findOne({name:req.body.name}, (err, productResult)=>{
+    if (productResult){
+      res.send('product already added');
+    }else{
+      const dbProduct = new Product({
+        _id : new mongoose.Types.ObjectId,
+        name : req.body.name,
+        price : req.body.price,
+        imageUrl : req.body.imageUrl
+      });
+      //save to database and notify the user accordingly
+      dbProduct.save().then(result =>{
+        res.send(result);
+      }).catch(err => res.send(err));
+    }
+  })
+});
+
+//GET ALL PRODUCTS
+app.get('allProductsFromDB', (req,res)=>{
+  Product.find().then(result =>{
+    res.send(result);
+  })
+});
+
+//DELETE A PRODUCT ==>DELETE
+app.delete('/deleteProduct/:id', (req,res)=>{
+  const idParam = req.params.id;
+  Product.findOne({_id: idParam}, (err, product)=>{ // id refers to mongodb
+    if (product){
+      Product.deleteOne({_id:idParam}, err=>{
+        res.send('deleted');
+      });
+    } else {
+      res.send('not found');
+    }
+  }).catch(err=> res.send(err));// to cath any error
+});
+
+//UPDATE A PRODUCT ==> PATCH
+app.patch('/updateProduct/:id', (req, res)=>{
+  const idParam = req.params.id;
+  Product.findById(idParam, (err,product)=>{
+    const updateProduct = {
+      name : req.body.name,
+      price : req.body.price,
+      imageUrl : req.body.imageUrl
+    };
+    Product.updateOne({_id:idParam}, updateProduct).then(result =>{
+      res.send(result);
+    }).catch(err=> res.send(err));
+  }).catch(err=>res.send('not found'));
+});
+
+//RESGISTER USER
 app.post('/registerUser', (req,res)=>{
 	//checking if user is found in the db already
 	User.findOne({username: req.body.username}, (err, userResult)=>{
@@ -72,11 +126,11 @@ app.post('/registerUser', (req,res)=>{
     		password :req.body.password
    		});
    		//Save to database and notify the user accordingly
-   		user.save().then(result =>{ 
+   		user.save().then(result =>{
     	res.send(result);
    		}).catch(err => res.send(err));
 		}
-	}) 	
+	})
 });
 
 //GET ALL USERS
